@@ -1,11 +1,15 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
+#include <stdlib.h>
+
+
+/*struct amigos
+se define un struct para almacenar los datos
+de contacto para luego enviarlos al archivo amigos.txt
+*/
+struct amigos{
+	char usuario[100], ip[100], puerto[100];
+	};
 
 /* Funcion agregarAmigos
 Le solicita al usuario 3 datos
@@ -16,19 +20,36 @@ Guarda los 3 datos solicitados en un struct para luego enviarlos al archivo
 amigos.txt que funciona como la agenda de amigos
 */
 void agregarAmigos(){
-	char nombre, ip, puerto;
-	printf("Indique el nombre de usuario ");
-	scanf("%s",&nombre);
+	struct amigos amg;
+	char nombre[100],ip[100],puerto[100];
+	printf("\nIndique el nombre de usuario ");
+	scanf("%s",nombre);
+	strcpy(amg.usuario,nombre);
 	printf("Indique la ip: ");
-	scanf("%s",&ip);
+	scanf("%s",ip);
+	strcpy(amg.ip,ip);
 	printf("Indique el puerto: ");
-	scanf("%s",&puerto);
+	scanf("%s",puerto);
+	strcpy(amg.puerto,puerto);
 
 	FILE* fichero;
 	
-	fichero = fopen("amigos.txt","wt");
-	fputs(nombre, fichero);
+	fichero = fopen("amigos.txt","a");
+	if(fichero!= NULL){
+		fprintf(fichero,"%s; %s; %s\n",amg.usuario,amg.ip,amg.puerto);
+		fclose(fichero);
+	}
 	
+	char opcion;
+	printf("\nDesea ingresar otro contacto: (s/n)");
+	scanf("%s",&opcion);
+	while(opcion != 'n' & opcion != 's'){
+		printf("\nIngreso una opcion incorrecta\n");
+		printf("Desea ingresar otro contacto: (s/n)");
+		scanf("%s",&opcion);
+	}
+	if(opcion == 's')
+		agregarAmigos();
 }
 
 //Funcion que lee el dato ingresado por el usuario
@@ -53,7 +74,7 @@ Opcion 1 --> permite agregar amigos a su agenda de contactos
 Opcion 2 --> permite enviar mensaje a un amigo determinado
 Opcion 3 --> salir del programa
 */
-void main(){
+void menu(){
 	int opcion;
 	printf("---- Menu ---\n");
 	printf("1. Agregar amigos\n");
@@ -65,4 +86,8 @@ void main(){
 	opciones(opcion);
 }
 
-
+//Funcion main
+void main(){
+	printf("\n-------------BIENVENIDO (A) AL PROGRAMA -------------\n\n");
+	menu();
+}
