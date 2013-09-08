@@ -1,6 +1,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+<<<<<<< HEAD
+=======
+
+
+/*struct amigos
+se define un struct para almacenar los datos
+de contacto para luego enviarlos al archivo amigos.txt
+*/
+struct amigos{
+	char usuario[100], ip[100], puerto[100];
+	};
+>>>>>>> 132a5ed605890b0b9a71fdeace145f89ed07cf22
 
 /* Funcion agregarAmigos
 Le solicita al usuario 3 datos
@@ -10,6 +22,7 @@ Le solicita al usuario 3 datos
 Guarda los 3 datos solicitados en un struct para luego enviarlos al archivo
 amigos.txt que funciona como la agenda de amigos
 */
+<<<<<<< HEAD
 int agregarAmigos(){
 	FILE* fichero;
 	fichero = fopen("amigos.txt","a"); // Abre el archivo amigos.txt
@@ -39,12 +52,41 @@ int agregarAmigos(){
 
 	// Si el usuario ingreso una opcion distina a 'n' o 's'
 	// Le indica que la opcion es incorrecta y que vuelva a intentar
+=======
+void agregarAmigos(){
+	struct amigos amg;
+	char nombre[100],ip[100],puerto[100];
+	printf("\nIndique el nombre de usuario ");
+	scanf("%s",nombre);
+	strcpy(amg.usuario,nombre);
+	printf("Indique la ip: ");
+	scanf("%s",ip);
+	strcpy(amg.ip,ip);
+	printf("Indique el puerto: ");
+	scanf("%s",puerto);
+	strcpy(amg.puerto,puerto);
+
+	FILE* fichero;
+	
+	fichero = fopen("amigos.txt","a");
+	if(fichero!= NULL){
+		fprintf(fichero,"%s; %s; %s\n",amg.usuario,amg.ip,amg.puerto);
+		fclose(fichero);
+	}
+	
+	char opcion;
+	printf("\nDesea ingresar otro contacto: (s/n)");
+	scanf("%s",&opcion);
+>>>>>>> 132a5ed605890b0b9a71fdeace145f89ed07cf22
 	while(opcion != 'n' & opcion != 's'){
 		printf("\nIngreso una opcion incorrecta\n");
 		printf("Desea ingresar otro contacto: (s/n)");
 		scanf("%s",&opcion);
 	}
+<<<<<<< HEAD
 	// Si ingreso la opcion 's', vuelve llamar a la funcion agregarAmigos()
+=======
+>>>>>>> 132a5ed605890b0b9a71fdeace145f89ed07cf22
 	if(opcion == 's')
 		agregarAmigos();
 }
@@ -97,4 +139,8 @@ void main(){
 		menu();
 }
 
-
+//Funcion main
+void main(){
+	printf("\n-------------BIENVENIDO (A) AL PROGRAMA -------------\n\n");
+	menu();
+}
