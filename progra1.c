@@ -1,18 +1,42 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-<<<<<<< HEAD
-=======
 
-
-/*struct amigos
-se define un struct para almacenar los datos
-de contacto para luego enviarlos al archivo amigos.txt
+/*Funcion enviarMensajes
+Es la funcion encargada de solicitar la funcion
 */
-struct amigos{
-	char usuario[100], ip[100], puerto[100];
-	};
->>>>>>> 132a5ed605890b0b9a71fdeace145f89ed07cf22
+int enviarMensajes(){
+	FILE *archivo=NULL;
+	char* nombre = "amigos.txt";
+	char lectura[80],nom_amigo[80],ip_amigo[80],puerto_amigo[80];
+	int tamanno;
+
+	printf("\nMensaje para: "); // Solicita el usuario el nombre del amigo al cual le desea enviar msj
+	scanf("%s",nom_amigo); //Lee el dato ingresado y lo guarda en nom_amigo
+	
+	archivo = fopen(nombre, "r"); //Abre el archivo para leerlo
+
+	//Lectura del archivo linea por linea
+	while(!feof(archivo)){
+		fscanf(archivo,"%s",lectura);
+		int n;
+		n = strcmp(nom_amigo,lectura); // Funcion que compara las cadenas nom_amigo y lectura
+		// lectura hace referencia al dato que esta leyendo
+		// nom_amigo es el dato que el usuario ingreso anteriormente
+		// si n es igual a 0, se refiere que ambas cadenas son iguales
+		if(n==0){ //si los datos son iguales ingresa el if
+			fscanf(archivo,"%s",lectura); // lee el segundo dato del archivo
+			strcpy(lectura,ip_amigo);	// guarda el dato en ip_amigo
+			fscanf(archivo,"%s",lectura);	// lee el tercer dato del archivo
+			strcpy(lectura,puerto_amigo);  // guarda el dato en puerto_amigo
+			break;
+		}
+		if(feof(archivo)){
+			printf("\nNo se tiene informacion del contacto indicado\n");
+			}
+	}
+	fclose(archivo);
+}
 
 /* Funcion agregarAmigos
 Le solicita al usuario 3 datos
@@ -22,7 +46,6 @@ Le solicita al usuario 3 datos
 Guarda los 3 datos solicitados en un struct para luego enviarlos al archivo
 amigos.txt que funciona como la agenda de amigos
 */
-<<<<<<< HEAD
 int agregarAmigos(){
 	FILE* fichero;
 	fichero = fopen("amigos.txt","a"); // Abre el archivo amigos.txt
@@ -52,41 +75,13 @@ int agregarAmigos(){
 
 	// Si el usuario ingreso una opcion distina a 'n' o 's'
 	// Le indica que la opcion es incorrecta y que vuelva a intentar
-=======
-void agregarAmigos(){
-	struct amigos amg;
-	char nombre[100],ip[100],puerto[100];
-	printf("\nIndique el nombre de usuario ");
-	scanf("%s",nombre);
-	strcpy(amg.usuario,nombre);
-	printf("Indique la ip: ");
-	scanf("%s",ip);
-	strcpy(amg.ip,ip);
-	printf("Indique el puerto: ");
-	scanf("%s",puerto);
-	strcpy(amg.puerto,puerto);
-
-	FILE* fichero;
-	
-	fichero = fopen("amigos.txt","a");
-	if(fichero!= NULL){
-		fprintf(fichero,"%s; %s; %s\n",amg.usuario,amg.ip,amg.puerto);
-		fclose(fichero);
-	}
-	
-	char opcion;
-	printf("\nDesea ingresar otro contacto: (s/n)");
-	scanf("%s",&opcion);
->>>>>>> 132a5ed605890b0b9a71fdeace145f89ed07cf22
 	while(opcion != 'n' & opcion != 's'){
 		printf("\nIngreso una opcion incorrecta\n");
 		printf("Desea ingresar otro contacto: (s/n)");
 		scanf("%s",&opcion);
 	}
-<<<<<<< HEAD
+
 	// Si ingreso la opcion 's', vuelve llamar a la funcion agregarAmigos()
-=======
->>>>>>> 132a5ed605890b0b9a71fdeace145f89ed07cf22
 	if(opcion == 's')
 		agregarAmigos();
 }
@@ -102,7 +97,7 @@ void opciones(int opc){
 	if(opc == 1)
 		agregarAmigos(); // se dirige a agregarAmigos()
 	if(opc ==2)
-		printf("Ingreso a enviar"); // se dirige a enviarMensajes()
+		enviarMensajes(); // se dirige a enviarMensajes()
 	if(opc ==3)
 		exit(0);	// cierra el programa
 	if(opc > 3){
@@ -131,16 +126,49 @@ void menu(){
 	opciones(opcion); // se dirige a la funcion opciones
 }
 
+/* Funcion configuracion
+Verifica si el archivo config tiene los 3 datos del usuario
+1- Nombre de usuario
+2- IP del usuario
+3- Puerto del usuario
+Si el archivo tiene los datos anteriores los envia para ser usados en la funcion servidor()
+Sino se los solicita al usuario y una vez ingresados se los envia a la funcion servidor()
+*/
+void configuracion(){
+	FILE *archivo=NULL;
+	char* nombre = "config.txt";
+	char lectura[80],usuario[80],ip[80],puerto[80];
+	int tamanno;
+	
+	archivo = fopen(nombre, "r"); //abre el archivo config.txt
+
+	while(!feof(archivo)){
+		fscanf(archivo,"%s",lectura); // lee cada linea del archivo
+		tamanno = ftell(archivo); // determina el tamanno del archivo
+	}
+
+	// Si el tamnanno es igual a 0
+	// solicita al usuario los datos requeridos
+	if(tamanno == 0){
+		archivo = fopen(nombre,"a"); //abre el archivo para escribir en el
+		printf("\n ----- Configuracion del programa ----- \n");
+		printf("Indique su nombre de usuario: ");
+		scanf("%s",usuario);	//lee el dato ingresado por el usuario y lo guarda en usuario
+		fprintf(archivo, "%s",usuario);	// escribi lo que esta en usuario en el archivo
+		printf("Indique su ip de usuario: ");
+		scanf("%s",ip);	//lee el dato ingresado por el usuario y lo guarda en ip
+		fprintf(archivo, " %s ",ip); // escribi lo que esta en ip en el archivo
+		printf("Indique su puerto de usuario: "); 
+		scanf("%s",puerto); //lee el dato ingresado por el usuario y lo guarda en puerto
+		fprintf(archivo, "%s\n",puerto); // escribi lo que esta en puerto en el archivo
+	}
+}
 
 void main(){
+	configuracion();
 	printf("-------------BIENVENIDO (A) AL PROGRAMA -------------\n\n");
 	int salir = 0;
 	while(salir==0)
 		menu();
 }
 
-//Funcion main
-void main(){
-	printf("\n-------------BIENVENIDO (A) AL PROGRAMA -------------\n\n");
-	menu();
-}
