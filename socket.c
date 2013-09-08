@@ -14,22 +14,6 @@ void error(char *mensaje_error){
 	exit(0);
 }
 
-//Funcion que recibe los datos que se necesitan
-void datos (){
-	char x,y,z;
-	int cont = 0;
-	printf("Ingrese su puerto: \n");
-	scanf("%c", &x);
-	cont ++;
-	printf("Ingrese el puerto del receptor: \n");
-	scanf("%c", &y);
-	cont++;
-	printf("Ingrese la direccion ip del receptor: \n");
-	scanf("%c", &z);
-	cont++;
-	printf("%c %c %c %d",x,y,z,cont);
-}
-
 /*Comandos que se utilizaran:
 033[2J Limpia la pantalla
 033[1;1H Se coloca en la esquina superior irzq de la misma
@@ -41,8 +25,7 @@ void datos (){
 033[01;37m Color Blanco(Normal)
 */
 
-int main (int c,  char *arg[]){
-	datos();
+int main (int c,  char *arg[]){ 
 
 	if (c!=3){
 		error("Ingrese los 3 argumentos necesarios");
@@ -60,7 +43,8 @@ int main (int c,  char *arg[]){
 
 		//transforma la direccion IP de un tipo char ej: "127.0.0.1" en tipo direccion para ser guardado en la estructura
 		inet_pton(AF_INET, arg[3], &(direc_servidor.sin_addr.s_addr));
-		direc_servidor.sin_port = htons(atoi(arg[2])); // conversion de char* a int y el htons convierte un int a bytes de red
+		//esta linea es la que establece el puerto a utilizar por parte del usuario
+		direc_servidor.sin_port = htons(atoi(arg[2])); // conversion de char* a int y el htons convierte un int a bytes de red  
 
 		//Inicia el proceso de conexion
 		printf("Iniciando conexion\n");
@@ -76,7 +60,7 @@ int main (int c,  char *arg[]){
 			if (veces > 20){
 				close(socket_propio);
 				kill(getppid(),9);
-				error("No se logro realizar la conecxion en los 20 intentos");
+				error("No se logro realizar la conexion en los 20 intentos");
 			}//Cierre del if (veces)
 			sleep(1);//Pausa de 1 segundo
 		}//Cierre del while
