@@ -10,6 +10,64 @@
 #include <string.h>
 
 #define MAX 500
+//inicia función servidor
+int servidor (int argc, char *argv[]){
+	time_t Time;
+	int socket_propio, conexion, cliLen, recvLen;
+	struct sockaddr_in cliAddr, servAddr;
+	char line[MAX];
+
+	socket_propio = socket(AF_INET, SOCK_STREAM, 0);
+	
+	servAddr.sin_family = AF_INET; // Construccion de direccion
+	servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	servAddr.sin_port = htons(atoi(argv[0]));
+
+	//Union del socket con esta direccion
+	if(bind(socket_propio, (struct sockaddr *) &servAddr, sizeof(servAddr))<0){
+		perror("No se puede conectar al puerto ");
+		exit(1);
+	}
+
+	//Ciclo donde el puerto se matiene escuchando
+	while(1){
+
+		listen(socket_propio,10); //Le indica al socket que espere conexiones
+		cliLen=sizeof(cliAddr); // Determina el largo de la direccion del cliente
+		//verifica si la conexion con el socket es correcta
+		conexion= accept(socket_propio, (struct sockaddr *) &cliAddr, &cliLen);
+		if(conexion <0){
+			perror("Error. Conexion no aceptada");
+			exit(1);
+		}
+		
+		memset(line,0x0,MAX); //inicia la linea de escucha
+
+		recvLen = recv(conexion, line, MAX, 0); // Espera que lleguen todos los datos
+		//Si el numero de datos es menor que 0 envia error
+		if(recvLen < 0){
+			perror("Error en la recepcion de datos");
+			exit(1); // sale del programa
+		}
+
+		// Cuando ya tiene todos los datos recibidos, los muestra en pantalla
+		printf("Mensaje recibido de: %s",line);
+		// ----------------
+
+		//Recibe los mensajes enviados
+		recvLen = recv(conexion, line, MAX, 0); // Espera que lleguen todos los datos
+		//Si el numero de datos es menor que 0 envia error
+		if(recvLen < 0){
+			perror("Error en la recepcion de datos");
+			exit(1); // sale del programa
+		}
+
+		// Cuando ya tiene todos los datos recibidos, los muestra en pantalla
+		printf("\n%s\n", line);
+	}
+
+	return 0;
+}
 
 int prueba(int argc, char*argv[]){
 	int socket_propio; // ID del socket de conexio 
