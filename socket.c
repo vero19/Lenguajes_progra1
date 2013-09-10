@@ -1,193 +1,140 @@
-//Inclusiones de las librerias que se van a utilizar
+//Inclucion de librerias necesarias para el programa
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h>
 
-//Envia un mensaje de error y termina el programa
-void error(char *mensaje_error){
-	printf("%s\nIntente de nuevo!\n",mensaje_error);
-	exit(0);
-}
+#define MAX 500
 
-//Funcion que recibe los datos que se necesitan
-void datos (){
-	char x,y,z;
-	int cont = 0;
-	printf("Ingrese su puerto: \n");
-	scanf("%c", &x);
-	cont ++;
-	printf("Ingrese el puerto del receptor: \n");
-	scanf("%c", &y);
-	cont++;
-	printf("Ingrese la direccion ip del receptor: \n");
-	scanf("%c", &z);
-	cont++;
-	printf("%c %c %c %d",x,y,z,cont);
-}
-
-/*Comandos que se utilizaran:
-033[2J Limpia la pantalla
-033[1;1H Se coloca en la esquina superior irzq de la misma
-033[01;33m Color Amarillo
-033[01;37m Color Blanco
-033[01;32m Color Verde
-033[2K\r Limpia la linea en caso de que se este escribiendo
-033[01;31m Color Rojo
-033[01;37m Color Blanco(Normal)
+/*Funcion servidor
+Recibe como parametro el puerto
+Se encarga de mantener el puerto en escucha
+Una vez identificado un mensaje de entrada lo muestra en pantalla
 */
+int servidor (int argc, char *argv[]){
+	int socket_propio; //ID del socket de conexion
+	/*conexion -> int que verifica la conexion con el socket
+	  cliAddr -> indica el largo de la direccion del cliente
+	  recvLen -> int que verifica si ha recibido un mensaje */
+	int conexion, cliLen, recvLen; 
+	/* cliAddr --> Estructura para la direccion del cliente
+	   servAddr --> Estructura para la direccion del servidor(local)*/
+	struct sockaddr_in cliAddr, servAddr;
+	char line[MAX];
 
-int main (int c,  char *arg[]){
-	datos();
+	socket_propio = socket(AF_INET, SOCK_STREAM, 0); //Pide el socket TCP/IP
+	
+	servAddr.sin_family = AF_INET; // Construccion de direccion
+	servAddr.sin_addr.s_addr = htonl(INADDR_ANY); 
+	servAddr.sin_port = htons(atoi(argv[0])); // convierte el dato de puerto en bits de red
 
-	if (c!=3){
-		error("Ingrese los 3 argumentos necesarios");
+	//Union del socket con esta direccion
+	if(bind(socket_propio, (struct sockaddr *) &servAddr, sizeof(servAddr))<0){
+		perror("No se puede conectar al puerto");
+		exit(1);
 	}
 
-	pid_t inicioPID=fork();//Inicia el fork y guarda el identificador del proceso
-	if (inicioPID==0){
-		int socket_propio;//ID del socket de conexion
-		struct sockaddr_in direc_servidor;//Estructura para la direccion del receptor del mensaje
-		char buffer[256];//Variable para almacenar las escrituras en socket
-		socket_propio = socket(AF_INET, SOCK_STREAM, 0);//Pide el socket tcp/ip
-
-		//Construccion de direccion del receptor
-		direc_servidor.sin_family = AF_INET;
-
-		//transforma la direccion IP de un tipo char ej: "127.0.0.1" en tipo direccion para ser guardado en la estructura
-		inet_pton(AF_INET, arg[3], &(direc_servidor.sin_addr.s_addr));
-		direc_servidor.sin_port = htons(atoi(arg[2])); // conversion de char* a int y el htons convierte un int a bytes de red
-
-		//Inicia el proceso de conexion
-		printf("Iniciando conexion\n");
-		printf("Espere un momento...\n");
-		int conecxion=-1;//Identificador de conexion 
-		int veces = 0;
-		while(conecxion<0){
-			//Intenta conectarse (max 20 intentos en 20 segundos)
-			conecxion = connect(socket_propio,
-			(struct sockaddr *) &direc_servidor,
-			sizeof(direc_servidor));
-			veces++;
-			if (veces > 20){
-				close(socket_propio);
-				kill(getppid(),9);
-				error("No se logro realizar la conecxion en los 20 intentos");
-			}//Cierre del if (veces)
-			sleep(1);//Pausa de 1 segundo
-		}//Cierre del while
-
-		//Una vez realizada la conexion imprime lo siguiente
-
-		printf(	"\033[2J\033[1;1H"
-		"---------------------------------------\n"
-		"||||| \033[01;33mBienvenido!!!\033[01;37m |||||\n"
-		"---------------------------------------\n"
-		"\033[01;32mConexion Establecida!!!!\n"
-		"Ingrese los mensajes\033[01;37m\n");
-
-		//Separacion de procesos envio de mensajes y cierre de socket
-		pid_t envio = fork();//Inicia el fork 
-	
-		//Proceso que la entrada del stdout y envia el mensaje
-		if (envio == 0) {
-			pid_t proceso2 = (getppid()-1);//Devuelve el PID
-			int estado = 1;
-			while(estado == 1){
-				if (getppid()==1){ //Revisa estado del proceso padre para cerrar sockets
-					close(socket_propio);
-					int cerrar = kill(proceso2,8); //Kill es para enviar señales a un proceso pid_t
-					sleep(2);
-					estado = 0;
-					//Lineas que le ponen color a los mensajes impresos
-					char *color = "";
-					if(cerrar==0) {
-						color ="\033[A\033[2K";}
-					printf(	"\033[2K\r"
-					"\033[01;32m%s"
-					"Conexion Finalizada..."
-					"\nPresione Enter para salir"
-					"\033[01;37m!!!",color);
-				}//Fin de if (getppid)
-			}//Fin del while	
-		}//Fin del if(envio)
-		else {	
-			int estado = 1;
-			while(estado == 1){
-				bzero(buffer,256);//Limpia la variable buffer
-				//Recibe texto por parte del usuario y lo guarda en la variable buffer
-				//la funcion fgets es una funcion que lee los caracteres de un file
-				fgets(buffer,255,stdin);
-				if(strcmp(buffer,"\n") != 0){ //Compara el mensaje a enviar con un salto de linea para verificar que se vaya a enviar algo
-					printf(	"\033[A\033[2K\033[01;36m"
-					"Mensaje Enviado:\033[01;37m %s",buffer);
-				}//Fin de if(strcmp)
-				//Escribe en el socket para enviar
-				write(socket_propio,buffer,strlen(buffer));//Escribe el socket con el mensaje a enviar
-				estado = 0;
-			}//Fin del while
-		}//Fin del else
-	}//Fin del if principal
-
-	// Proceso padre: Aca ejecuta el codigo servidor
-	else {
-		int socket_Servidor, socket_serv_conectado;
-		char buffer[256];//Variable para almacenar lecturas del socket
-
-		struct sockaddr_in direc_servidor, direc_cliente;//Estructura para guardar las direcciones en el socket
-
-		//Pide el socket
-		//Tipo internet tcp/ip
-		socket_Servidor = socket(AF_INET, SOCK_STREAM, 0);//Pide el socket tcp/ip
-	
-		//Construccion de direccion de este servidor
-		direc_servidor.sin_family = AF_INET;
-		direc_servidor.sin_addr.s_addr = INADDR_ANY;//Su propio IP
-		direc_servidor.sin_port = htons(atoi(arg[1])); // conversion de char* a int y el htons convierte un int a bytes de red
-	
-		//Union del socket con esta direccion
-		bind(socket_Servidor, (struct sockaddr *) &direc_servidor, sizeof(direc_servidor));
-
-		//Le indica al socket que espere conexiones
-		listen(socket_Servidor,5);
-
-		//Inicial el proceso de aceptar conexiones y almacenarla en un nuevo
-		//identificador de socket
-		socklen_t largo_dir_cliente = sizeof(direc_cliente);
-		socket_serv_conectado = accept(socket_Servidor, (struct sockaddr *) &direc_cliente, &largo_dir_cliente);
+	//Ciclo donde el puerto se matiene escuchando
+	while(1){
+		listen(socket_propio,10); //Le indica al socket que espere conexiones
+		cliLen=sizeof(cliAddr); // Determina el largo de la direccion del cliente
+		//verifica si la conexion con el socket es correcta
+		conexion= accept(socket_propio, (struct sockaddr *) &cliAddr, &cliLen);
+		if(conexion <0){
+			perror("Error. Conexion no aceptada");
+			exit(1);
+		}
 		
-		//Inicia recepcion del mensaje y el cierre del socket
-		pid_t recepcion=fork();//Inicia el fork 
+		memset(line,0x0,MAX); //inicia la linea de escucha
 
-		if (recepcion == 0) {
-			pid_t proceso3 = (getppid()+1);
-			int ciclo = 1;
-			while(ciclo == 1){
-				if(getppid()==1){//Revisa estado del proceso padre para cerrar sockets
-					close(socket_Servidor);
-					close(socket_serv_conectado);
-					kill(proceso3,8);
-					ciclo = 0;
-				}//Fin del if(getppid)
-			}//Fin del while
-		}//Fin del if(recepcion)
-		else {
-			int ciclo = 1;
-			while(ciclo == 1){
-				//Lectura del socket
-				bzero(buffer,256);//Limpia el buffer
-				read(socket_serv_conectado,buffer,255); //Lee los datos que se encuentran en el socket
-				if(strcmp(buffer,"\n") != 0){ //Compara los escrito en buffer con con el salto de linea
-					printf(	"\033[2K\r\033[01;31m"
-					"Mensaje Recibido:\033[01;37m %s",buffer); //Imprime el mensaje recibido
-				}//Fin del if(strcmp)
-				ciclo = 0;
-			}//fin del while
-		}//Fin del primer else
-	}//Fin del else principal
-return 1;
-}//Fin del main
+		recvLen = recv(conexion, line, MAX, 0); // Espera que lleguen todos los datos
+		//Si el numero de datos es menor que 0 envia error
+		if(recvLen < 0){
+			perror("Error en la recepcion de datos");
+			exit(1); // sale del programa
+		}
+		// Cuando ya tiene todos los datos recibidos, los muestra en pantalla
+		printf("\033[01;32m\n\nMensaje recibido de: %s",line);
+		// ----------------
+
+		//Recibe los mensajes enviados
+		recvLen = recv(conexion, line, MAX, 0); // Espera que lleguen todos los datos
+		//Si el numero de datos es menor que 0 envia error
+		if(recvLen < 0){
+			perror("Error en la recepcion de datos");
+			exit(1); // sale del programa
+		}
+		// Cuando ya tiene todos los datos recibidos, los muestra en pantalla
+		printf("\n%s\n\033[01;37m", line);
+	}
+	return 0;
+}
+
+/*Funcion cliente
+Recibe como parametros los datos del amigo a enviar mensaje
+Se encarga de enviar los mensajes a los amigos
+*/
+int cliente(int argc, char*argv[]){
+	char *puerto, *ip;
+	puerto = argv[2];
+	ip = argv[1];
+	int socket_propio; // ID del socket de conexio 
+	int conexion; /*conexion -> int que verifica la conexion con el socket*/
+	char buffer[MAX]; //Variable para almacenar las escrituras en socket
+	struct sockaddr_in servAddr; // Estructura para la direccion del amigo
+	struct sockaddr_in localAddr;  // Estructura para la direccion local del mensaje
+	socket_propio = socket(AF_INET, SOCK_STREAM, 0); //Pide el socket tcp/ip
+	//struct hostent *h;
+	
+	servAddr.sin_family = AF_INET; // Construccion de direccion del receptor
+	
+	//Transforma la direccion IP de un tip char ej: "127.0.0.1" en tipo direccion para ser guardada en la 		estructura
+	inet_pton(AF_INET,ip,&(servAddr.sin_addr.s_addr));
+	servAddr.sin_port= htons(atoi(puerto)); //conversion del char* a int y de int a bytes de red
+
+	//-----------------------------------------------------------------------------------
+	//Conexion con el socket 
+	conexion = connect(socket_propio, (struct sockaddr *) &servAddr, sizeof(servAddr));
+	if(conexion <0){ //Si conexion es menor que cero, indica que exites error en la conexion
+		perror("No se puede realizar la conexion" );
+		exit(1);
+	}
+
+	conexion = send(socket_propio,argv[0],strlen(argv[0])+1,0); //Verifica la conexion con el socket, para el envio de mensajes
+	
+	//Si conexion es igual a 1
+	if(conexion <0){  // Indica que el mensaje no se pudo enviar correctamente
+		perror("Fallo en la conexion. Mensaje no enviado"); 
+		close(socket_propio);
+		exit(1);
+	}
+
+	char mensaje[MAX]; //Variable que guardara el mensaje ingresado por el usuario
+	printf("\033[01;33mIngrese el mensaje deseado: ");//Solicita al usuario el mensaje que desea enviar
+	scanf(" %[^\n]",mensaje);	//Lee el mensaje ingresado y lo guarda en la variable mensaje
+	
+	//Proceso para enviar el mensaje
+	conexion = send(socket_propio,mensaje,strlen(mensaje)+1,0);
+	
+	//Si conexion es igual a 1
+	if(conexion <0){ 
+		perror("\033[01;37mFallo en la conexion. Mensaje no enviado"); 
+		close(socket_propio);
+		exit(1);
+	}
+	else{
+		printf("\033[01;37m\nMensaje enviado exitosamente\n");
+	}
+} 
+
+void main(){
+	char* datos[3];
+	datos[0] = "vero";
+	datos[1] = "192.168.1.109";
+	datos[2] = "62105";
+	
+	cliente(3,datos);
+	
+}
