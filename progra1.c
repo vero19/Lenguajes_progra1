@@ -361,4 +361,3 @@ int main(){
 	pthread_join(thread1,NULL);
 	return 0;
 }
-
