@@ -346,14 +346,18 @@ void *men(void *var){
 		menu();
 }
 
-void main(){
-	
-	configuracion();
-	
-	printf("-------------BIENVENIDO (A) AL PROGRAMA -------------\n\n");
-	int salir = 0;
-	while(salir ==0)
-		menu();
-		
+/*Funcion main
+incia el programa llamando a la funcion datoInicio --> verifica los datos de configuracion del usuario
+Luego ejecuta los hijos, hasta que el usuario le de salir al programa */
+int main(){
+	datoInicio();
+	printf("------------- BIENVENIDO (A) ------------- \n\n");
+	pthread_t thread1, thread2;
+	char *mensaje1 = "muesta el menu";
+	char *mensaje2 = "muesta el menu";
+	pthread_create(&thread2,NULL,conf,(void*)mensaje2);
+	pthread_create(&thread1,NULL,men,(void*)mensaje1);	
+	pthread_join(thread2,NULL);
+	pthread_join(thread1,NULL);
+	return 0;
 }
-
